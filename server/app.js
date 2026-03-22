@@ -1,8 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const connectDB = require('./config/db');
 
-dotenv.config();
+dotenv.config({ path: __dirname + '/.env' });
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 
@@ -12,14 +16,33 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Portfolio Evaluator API is running' });
+// Health check — now also reports DB status
+app.get('/api/health', async (req, res) => {
+  const mongoose = require('mongoose');
+  const dbState = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+
+  res.json({
+    status: 'ok',
+    message: 'Portfolio Evaluator API is running',
+    database: dbState[mongoose.connection.readyState] || 'unknown',
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// TODO (Day 2): Connect MongoDB
-// TODO (Day 3): Mount profile routes
+// 404 handler for unknown routes
+app.use((req, res) => {
+  res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error',
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
