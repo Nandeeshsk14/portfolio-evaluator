@@ -5,10 +5,10 @@ const connectDB = require('./config/db');
 
 dotenv.config({ path: __dirname + '/.env' });
 
-// Connect to MongoDB
-connectDB();
-
 const app = express();
+
+// Connect to MongoDB Atlas
+connectDB();
 
 // Middleware
 app.use(cors({
@@ -16,33 +16,31 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
-// Health check — now also reports DB status
-app.get('/api/health', async (req, res) => {
+// Health check route
+app.get('/api/health', (req, res) => {
   const mongoose = require('mongoose');
-  const dbState = ['disconnected', 'connected', 'connecting', 'disconnecting'];
-
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
   res.json({
     status: 'ok',
     message: 'Portfolio Evaluator API is running',
-    database: dbState[mongoose.connection.readyState] || 'unknown',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
   });
 });
 
-// 404 handler for unknown routes
-app.use((req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
+// Day 3 test route — remove this after verifying githubService works
+app.get('/api/test/:username', async (req, res) => {
+  try {
+    const { getUserProfile } = require('./services/githubService');
+    const profile = await getUserProfile(req.params.username);
+    res.json(profile);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-  });
-});
+// TODO (Day 6): Mount full profile routes
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
