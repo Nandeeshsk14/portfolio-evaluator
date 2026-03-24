@@ -17,7 +17,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Health check route
+// Health check
 app.get('/api/health', (req, res) => {
   const mongoose = require('mongoose');
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
@@ -29,12 +29,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Day 3 test route — remove this after verifying githubService works
+// Day 3 + 4 test route — fetches GitHub data AND scores it
+// Remove this after Day 6 when real routes are mounted
 app.get('/api/test/:username', async (req, res) => {
   try {
-    const { getUserProfile } = require('./services/githubService');
-    const profile = await getUserProfile(req.params.username);
-    res.json(profile);
+    const { fetchFullProfile } = require('./services/githubService');
+    const { generateReport }   = require('./services/scoringService');
+
+    const githubData = await fetchFullProfile(req.params.username);
+    const report     = generateReport(githubData);
+
+    res.json(report);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
