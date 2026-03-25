@@ -29,18 +29,41 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Day 3 + 4 test route — fetches GitHub data AND scores it
-// Remove this after Day 6 when real routes are mounted
+// Day 3–5 test route — fetch, score, save to MongoDB, return report
+// Remove after Day 6 when proper routes are mounted
 app.get('/api/test/:username', async (req, res) => {
   try {
+    const Report = require('./models/Report');
     const { fetchFullProfile } = require('./services/githubService');
     const { generateReport }   = require('./services/scoringService');
+    const { checkCache }       = require('./middleware/cache');
 
-    const githubData = await fetchFullProfile(req.params.username);
+    const username = req.params.username.toLowerCase().trim();
+
+    // Check cache first
+    const cached = await Report.findOne({ username });
+    if (cached && new Date() < new Date(cached.expiresAt)) {
+      return res.json({ ...cached.toObject(), fromCache: true });
+    }
+
+    // Fetch fresh data from GitHub and score it
+    const githubData = await fetchFullProfile(username);
     const report     = generateReport(githubData);
 
-    res.json(report);
+    // Save to MongoDB (upsert — update if exists, insert if not)
+    const saved = await Report.findOneAndUpdate(
+      { username },
+      report,
+      { upsert: true, new: true }
+    );
+
+    res.json({ ...saved.toObject(), fromCache: false });
+
   } catch (error) {
+    // Handle GitHub 404 — user doesn't exist
+    if (error.status === 404) {
+      return res.status(404).json({ error: `GitHub user "${req.params.username}" not found` });
+    }
     res.status(500).json({ error: error.message });
   }
 });
