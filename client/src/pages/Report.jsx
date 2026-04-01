@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { fetchReport } from '../utils/api.js';
 import ScoreCard from '../components/ScoreCard.jsx';
+import RadarChart from '../components/RadarChart.jsx';
 
 function Report() {
   const { username } = useParams();
@@ -46,6 +47,33 @@ function Report() {
       {/* ScoreCard — animated ring + category bars */}
       <ScoreCard report={report} />
 
+      {/* Two column layout for radar + languages on wider screens */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+
+        {/* Radar chart */}
+        <RadarChart scores={report.scores} />
+
+        {/* Language distribution */}
+        {report.languages?.length > 0 && (
+          <div className="card">
+            <h2 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Language Distribution</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              {report.languages.map((lang) => (
+                <div key={lang.name}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                    <span>{lang.name}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{lang.percent}%</span>
+                  </div>
+                  <div style={{ background: 'var(--bg-secondary)', borderRadius: '999px', height: '6px', overflow: 'hidden' }}>
+                    <div style={{ width: `${lang.percent}%`, height: '100%', background: 'var(--accent)', borderRadius: '999px' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Top repos */}
       {report.topRepos?.length > 0 && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
@@ -78,26 +106,6 @@ function Report() {
                   )}
                   <span>⭐ {repo.stars}</span>
                   <span>🍴 {repo.forks}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Language distribution */}
-      {report.languages?.length > 0 && (
-        <div className="card" style={{ marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Language Distribution</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            {report.languages.map((lang) => (
-              <div key={lang.name}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                  <span>{lang.name}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{lang.percent}%</span>
-                </div>
-                <div style={{ background: 'var(--bg-secondary)', borderRadius: '999px', height: '6px', overflow: 'hidden' }}>
-                  <div style={{ width: `${lang.percent}%`, height: '100%', background: 'var(--accent)', borderRadius: '999px' }} />
                 </div>
               </div>
             ))}
