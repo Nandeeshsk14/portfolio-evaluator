@@ -67,10 +67,19 @@ const getUserEvents = async (username) => {
   // We only care about push events (actual commits)
   const pushEvents = data.filter((event) => event.type === 'PushEvent');
 
+   // DEBUG — add these 3 lines
+  console.log('Total events from GitHub:', data.length);
+  console.log('Push events found:', pushEvents.length);
+  if (pushEvents.length > 0) {
+    console.log('Sample push event payload:', JSON.stringify(pushEvents[0].payload, null, 2));
+  }
+  
   return pushEvents.map((event) => ({
     date: event.created_at,
     repoName: event.repo.name,
-    commitCount: event.payload.commits ? event.payload.commits.length : 0,
+    // payload.size = total commits in push (reliable)
+    // payload.commits.length can be 0 if GitHub truncated the array
+    commitCount: event.payload.size || (event.payload.commits ? event.payload.commits.length : 1),
   }));
 };
 
