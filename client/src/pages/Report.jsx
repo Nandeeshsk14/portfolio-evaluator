@@ -1,10 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { fetchReport } from '../utils/api.js';
+import useMeta from '../utils/useMeta.js';
 import ScoreCard from '../components/ScoreCard.jsx';
 import RadarChart from '../components/RadarChart.jsx';
 import RepoList from '../components/RepoList.jsx';
 import LanguageChart from '../components/LanguageChart.jsx';
+import HeatMap from '../components/HeatMap.jsx';
+import ShareCard from '../components/ShareCard.jsx';
 
 function Report() {
   const { username } = useParams();
@@ -12,6 +15,16 @@ function Report() {
   const [report, setReport]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
+
+ useMeta({
+  title: report
+    ? `${report.name} (@${report.username}) — Dev Score ${report.scores.overall}/100`
+    : `Developer Portfolio Evaluator`,
+  description: report
+    ? `${report.name}'s GitHub scorecard. Overall: ${report.scores.overall}/100.`
+    : 'Analyse any GitHub profile and get a detailed developer scorecard.',
+  imageUrl: report?.avatarUrl || '',
+});
 
   useEffect(() => {
     if (!username) return;
@@ -28,9 +41,7 @@ function Report() {
     <div className="spinner-wrap">
       <div className="spinner" />
       <p>Analysing <strong>{username}</strong>'s GitHub profile...</p>
-      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-        First fetch may take up to 10 seconds
-      </p>
+      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>First fetch may take up to 10 seconds</p>
     </div>
   );
 
@@ -51,6 +62,9 @@ function Report() {
       {/* Animated score ring + category bars */}
       <ScoreCard report={report} />
 
+      {/* Contribution heatmap */}
+      <HeatMap heatmapData={report.heatmapData} />
+
       {/* Radar + Language chart side by side */}
       <div style={{
         display: 'grid',
@@ -65,19 +79,13 @@ function Report() {
       {/* Repo cards grid */}
       <RepoList repos={report.topRepos} />
 
-      {/* Footer row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          {report.fromCache ? '⚡ Served from cache' : '🔄 Freshly fetched from GitHub'}
-          {report.cachedAt && ` · ${new Date(report.cachedAt).toLocaleString()}`}
-        </span>
-        <button
-          className="btn btn-outline"
-          style={{ fontSize: '0.85rem' }}
-          onClick={() => { navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }}
-        >
-          🔗 Copy shareable link
-        </button>
+      {/* Share card */}
+      <ShareCard username={report.username} scores={report.scores} />
+
+      {/* Cache status footer */}
+      <div style={{ textAlign: 'right', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+        {report.fromCache ? '⚡ Served from cache' : '🔄 Freshly fetched from GitHub'}
+        {report.cachedAt && ` · ${new Date(report.cachedAt).toLocaleString()}`}
       </div>
     </div>
   );
