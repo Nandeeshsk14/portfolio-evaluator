@@ -12,7 +12,8 @@ function Navbar() {
     if (username) { navigate(`/report/${username}`); setInput(''); }
   };
 
-  const isCompare = location.pathname === '/compare';
+  const isCompare  = location.pathname === '/compare';
+  const isHome     = location.pathname === '/';
 
   return (
     <nav className="navbar">
@@ -28,29 +29,40 @@ function Navbar() {
               color: isCompare ? 'var(--accent)' : 'var(--text-secondary)',
               fontWeight: isCompare ? 600 : 400,
               transition: 'color 0.15s',
+              whiteSpace: 'nowrap',
             }}
+            onMouseEnter={(e) => { if (!isCompare) e.target.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={(e) => { if (!isCompare) e.target.style.color = 'var(--text-secondary)'; }}
           >
             ⚔️ Compare
           </Link>
         </div>
 
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="GitHub username..."
-            style={{
-              background: 'var(--bg-primary)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-md)', padding: '0.45rem 0.9rem',
-              color: 'var(--text-primary)', fontSize: '0.9rem',
-              width: '180px', outline: 'none',
-            }}
-          />
-          <button type="submit" className="btn btn-primary" disabled={!input.trim()} style={{ fontSize: '0.85rem' }}>
-            Analyse
-          </button>
-        </form>
+        {/* Hide search on home page — it already has one */}
+        {!isHome && (
+          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem' }} className="navbar-search">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="GitHub username..."
+              style={{
+                background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)', padding: '0.45rem 0.9rem',
+                color: 'var(--text-primary)', fontSize: '0.88rem',
+                width: '180px',
+              }}
+            />
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={!input.trim()}
+              style={{ fontSize: '0.85rem', padding: '0.45rem 1rem' }}
+            >
+              Analyse
+            </button>
+          </form>
+        )}
       </div>
     </nav>
   );

@@ -33,16 +33,13 @@ function Report() {
     setLoading(true);
     setError('');
     setReport(null);
-
     fetchReport(username)
       .then((data) => { setReport(data); setLoading(false); })
       .catch((err)  => { setError(err.message); setLoading(false); });
   }, [username]);
 
-  // ── Loading state — show skeletons instead of spinner ──────────────────────
   if (loading) return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
-      {/* Subtle loading label */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.5rem', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
         <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
         Analysing <strong style={{ color: 'var(--text-secondary)' }}>@{username}</strong>...
@@ -53,19 +50,17 @@ function Report() {
     </div>
   );
 
-  // ── Error state ────────────────────────────────────────────────────────────
   if (error) return <ErrorState error={error} username={username} />;
 
   if (!report) return null;
 
-  // ── Empty state — report came back but has no repos ────────────────────────
   if (report.publicRepos === 0) return (
     <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>
       <div className="card" style={{ maxWidth: '480px', margin: '0 auto', padding: '2.5rem 2rem' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
         <h2 style={{ marginBottom: '0.5rem' }}>No public repositories</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-          <strong>@{username}</strong> exists on GitHub but has no public repos to analyse.
+          <strong>@{username}</strong> has no public repos to analyse.
         </p>
         <button className="btn btn-primary" onClick={() => navigate('/')}>← Search again</button>
       </div>
@@ -74,31 +69,14 @@ function Report() {
 
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
-
-      {/* Animated score ring + category bars */}
-      <ScoreCard report={report} />
-
-      {/* Contribution heatmap */}
-      <HeatMap heatmapData={report.heatmapData} />
-
-      {/* Radar + Language chart side by side */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '1.5rem',
-        marginBottom: '1.5rem',
-      }}>
+      <div className="fade-in-up"><ScoreCard report={report} /></div>
+      <div className="fade-in-up fade-in-up-1"><HeatMap heatmapData={report.heatmapData} /></div>
+      <div className="fade-in-up fade-in-up-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
         <RadarChart scores={report.scores} />
         <LanguageChart languages={report.languages} />
       </div>
-
-      {/* Repo cards */}
-      <RepoList repos={report.topRepos} />
-
-      {/* Share card */}
-      <ShareCard username={report.username} scores={report.scores} />
-
-      {/* Cache status */}
+      <div className="fade-in-up fade-in-up-3"><RepoList repos={report.topRepos} /></div>
+      <div className="fade-in-up fade-in-up-4"><ShareCard username={report.username} scores={report.scores} /></div>
       <div style={{ textAlign: 'right', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
         {report.fromCache ? '⚡ Served from cache' : '🔄 Freshly fetched from GitHub'}
         {report.cachedAt && ` · ${new Date(report.cachedAt).toLocaleString()}`}
