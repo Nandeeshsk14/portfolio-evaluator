@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Sub-schema for score categories
 const ScoresSchema = new mongoose.Schema({
   activity:    { type: Number, min: 0, max: 100, default: 0 },
   codeQuality: { type: Number, min: 0, max: 100, default: 0 },
@@ -10,7 +9,6 @@ const ScoresSchema = new mongoose.Schema({
   overall:     { type: Number, min: 0, max: 100, default: 0 },
 }, { _id: false });
 
-// Sub-schema for each repo card
 const RepoSchema = new mongoose.Schema({
   name:        { type: String, required: true },
   description: { type: String, default: '' },
@@ -21,13 +19,11 @@ const RepoSchema = new mongoose.Schema({
   topics:      { type: [String], default: [] },
 }, { _id: false });
 
-// Sub-schema for language distribution bar chart
 const LanguageSchema = new mongoose.Schema({
   name:    { type: String, required: true },
   percent: { type: Number, required: true },
 }, { _id: false });
 
-// Main Report schema
 const ReportSchema = new mongoose.Schema({
   username:    { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
   name:        { type: String, default: '' },
@@ -41,7 +37,9 @@ const ReportSchema = new mongoose.Schema({
   topRepos:    { type: [RepoSchema], default: [] },
   languages:   { type: [LanguageSchema], default: [] },
 
-  // TTL index — MongoDB auto-deletes this document after expiresAt
+  // Heatmap — { 'YYYY-MM-DD': commitCount } for last 52 weeks
+  heatmapData: { type: mongoose.Schema.Types.Mixed, default: {} },
+
   cachedAt:  { type: Date, default: Date.now },
   expiresAt: { type: Date, required: true, index: { expires: 0 } },
 }, { timestamps: true });
